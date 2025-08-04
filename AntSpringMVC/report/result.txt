@@ -1,0 +1,4 @@
+Testsuite: com.mkyong.test.TestMessage
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.013 sec
+
+Testcase: test_welcome_message took 0.001 sec
