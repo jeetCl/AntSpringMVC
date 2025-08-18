@@ -126,7 +126,12 @@
 	<target name="jacoco" depends="compile,junit">
                 <!-- Import JaCoCo Ant tasks -->
                 <taskdef uri="antlib:org.jacoco.ant" resource="org/jacoco/ant/antlib.xml">
-                  <classpath path="lib/jacocoant.jar" />
+                  <classpath>
+                    <fileset dir="lib">
+                      <include name="org.jacoco.*.jar" />
+                      <include name="asm*.jar" />
+                    </fileset>
+                  </classpath>
                 </taskdef>
 
                  <jacoco:coverage destfile="target/jacoco.exec" xmlns:jacoco="antlib:org.jacoco.ant">
