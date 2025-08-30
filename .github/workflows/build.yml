@@ -21,3 +21,44 @@ jobs:
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: 'zulu'
+
+      - name: Install Ant
+        run: sudo apt-get install ant -y
+
+      - name: Cache SonarScanner
+        id: cache-sonar-scanner
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar-scanner
+          restore-keys: |
+            ${{ runner.os }}-sonar-scanner
+
+      - name: Download SonarScanner
+        if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p $HOME/.sonar/sonar-scanner
+          curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+          unzip sonar-scanner.zip -d $HOME/.sonar/
+          mv $HOME/.sonar/sonar-scanner-* $HOME/.sonar/sonar-scanner
+          echo "$HOME/.sonar/sonar-scanner/bin" >> $GITHUB_PATH
+
+      - name: Verify SonarScanner
+        run: sonar-scanner --version
+
+      - name: Build with Ant
+        run: ant clean compile
+
+      - name: Run SonarQube Analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          sonar-scanner \
+            -Dsonar.projectKey=jeetCl_AntSpringMVC \
+            -Dsonar.organization=jeetcl \
+            -Dsonar.sources=. \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
