@@ -25,11 +25,13 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ant
+
       - name: Install Apache Ivy
         run: |
           curl -L -o ivy.jar https://repo1.maven.org/maven2/org/apache/ivy/ivy/2.5.1/ivy-2.5.1.jar
           sudo mkdir -p /usr/share/ant/lib
           sudo mv ivy.jar /usr/share/ant/lib/
+
       - name: Cache Sonar packages
         uses: actions/cache@v4
         with:
@@ -42,13 +44,35 @@ jobs:
           curl -sSLo $HOME/.sonar/sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
           unzip $HOME/.sonar/sonar-scanner.zip -d $HOME/.sonar/
           echo "$HOME/.sonar/sonar-scanner-5.0.1.3006-linux/bin" >> $GITHUB_PATH
+
       - name: Build Project with Ant
         run: |
           cd AntSpringMVC
           ant clean compile
+
       - name: Run SonarQube Analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
+          cd AntSpringMVC
           sonar-scanner \
-            -Dsonar.login=$SONAR_TOKEN
+            -Dsonar.projectKey=jenkins-testing-antspringmvc \
+            -Dsonar.projectName="Jenkins Testing - Ant Spring MVC" \
+            -Dsonar.projectVersion=1.0 \
+            -Dsonar.sources=src \
+            -Dsonar.tests=src/com/mkyong/test \
+            -Dsonar.exclusions=**/lib/**,**/target/**,**/*.jar,**/test/** \
+            -Dsonar.test.exclusions=**/lib/**,**/target/** \
+            -Dsonar.java.source=1.8 \
+            -Dsonar.java.target=1.8 \
+            -Dsonar.java.binaries=war/WEB-INF/classes \
+            -Dsonar.java.libraries=lib/*.jar \
+            -Dsonar.junit.reportPaths=report/TEST-*.xml \
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/jacoco.xml \
+            -Dsonar.jacoco.reportPaths=target/jacoco.exec \
+            -Dsonar.sourceEncoding=UTF-8 \
+            -Dsonar.web.file.suffixes=.html,.xhtml,.jsp,.jspf,.jspx \
+            -Dsonar.xml.file.suffixes=.xml \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.login=$SONAR_TOKEN \
+            -Dsonar.verbose=true
