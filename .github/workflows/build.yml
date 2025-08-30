@@ -21,10 +21,16 @@ jobs:
           java-version: 17
           distribution: 'zulu'
 
-      - name: Install Ant and Ivy
+      - name: Install Ant
         run: |
           sudo apt-get update
-          sudo apt-get install -y ant ant-ivy
+          sudo apt-get install -y ant
+
+      - name: Install Apache Ivy
+        run: |
+          curl -L -o ivy.jar https://repo1.maven.org/maven2/org/apache/ivy/ivy/2.5.1/ivy-2.5.1.jar
+          sudo mkdir -p /usr/share/ant/lib
+          sudo mv ivy.jar /usr/share/ant/lib/
 
       - name: Cache Sonar packages
         uses: actions/cache@v4
