@@ -1,7 +1,7 @@
 name: SonarQube Analysis
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: # Manual trigger
   push:
     branches:
       - main
@@ -21,8 +21,10 @@ jobs:
           java-version: 17
           distribution: 'zulu'
 
-      - name: Install Ant
-        run: sudo apt-get install -y ant
+      - name: Install Ant and Ivy
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ant ant-ivy
 
       - name: Cache Sonar packages
         uses: actions/cache@v4
@@ -47,5 +49,4 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           sonar-scanner \
-            -Dsonar.projectBaseDir=. \
             -Dsonar.login=$SONAR_TOKEN
