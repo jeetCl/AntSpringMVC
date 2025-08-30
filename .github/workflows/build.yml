@@ -6,7 +6,7 @@ on:
       - master
   pull_request:
     types: [opened, synchronize, reopened]
-  workflow_dispatch: # ✅ Added manual trigger
+  workflow_dispatch:
 
 jobs:
   build:
@@ -17,20 +17,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Full history for accurate analysis
+          fetch-depth: 0  # Full history for accurate blame
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: 17
           distribution: 'zulu'
-
-      - name: Cache SonarCloud packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
 
       - name: Cache Ant dependencies
         uses: actions/cache@v4
@@ -48,15 +41,13 @@ jobs:
         run: |
           ant -f AntSpringMVC/build.xml clean compile
 
-      - name: SonarCloud Analysis
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        with:
+          args: >
+            -Dsonar.projectKey=jeetCl_AntSpringMVC
+            -Dsonar.organization=jeetcl
+            -Dsonar.sources=AntSpringMVC/src
+            -Dsonar.java.binaries=AntSpringMVC/build
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Required for PR decoration
-        run: |
-          sonar-scanner \
-            -Dsonar.projectKey=jeetCl_AntSpringMVC \
-            -Dsonar.organization=jeetcl \
-            -Dsonar.sources=AntSpringMVC/src \
-            -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.java.binaries=AntSpringMVC/build \
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+          SO
