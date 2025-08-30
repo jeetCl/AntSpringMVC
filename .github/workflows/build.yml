@@ -1,7 +1,7 @@
-name: SonarQube
+name: SonarQube Analysis
 
 on:
-  workflow_dispatch: # Manual trigger
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -10,7 +10,7 @@ on:
 
 jobs:
   sonar:
-    name: Analyze Java project with SonarQube
+    name: Analyze Ant Project with SonarQube
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,6 +20,9 @@ jobs:
         with:
           java-version: 17
           distribution: 'zulu'
+
+      - name: Install Ant
+        run: sudo apt-get install -y ant
 
       - name: Cache Sonar packages
         uses: actions/cache@v4
@@ -32,10 +35,11 @@ jobs:
           mkdir -p $HOME/.sonar
           curl -sSLo $HOME/.sonar/sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
           unzip $HOME/.sonar/sonar-scanner.zip -d $HOME/.sonar/
-          export PATH=$HOME/.sonar/sonar-scanner-5.0.1.3006-linux/bin:$PATH
+          echo "$HOME/.sonar/sonar-scanner-5.0.1.3006-linux/bin" >> $GITHUB_PATH
 
-      - name: Build with Ant
+      - name: Build Project with Ant
         run: |
+          cd AntSpringMVC
           ant clean compile
 
       - name: Run SonarQube Analysis
@@ -43,8 +47,5 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           sonar-scanner \
-            -Dsonar.projectKey=jeetCl_AntSpringMVC \
-            -Dsonar.organization=jeetcl \
-            -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.login=$SONAR_TOKEN \
-            -Dsonar.java.binaries=build/classes
+            -Dsonar.projectBaseDir=. \
+            -Dsonar.login=$SONAR_TOKEN
