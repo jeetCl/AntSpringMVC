@@ -50,4 +50,5 @@ jobs:
             -Dsonar.sources=AntSpringMVC/src
             -Dsonar.java.binaries=AntSpringMVC/build
         env:
-          SO
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
