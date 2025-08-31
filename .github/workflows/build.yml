@@ -10,10 +10,11 @@ on:
 
 jobs:
   sonar:
-    name: Analyze Ant Project with SonarQube
+    name: Analyze Ant Project with SonarCloud
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -50,7 +51,7 @@ jobs:
           cd AntSpringMVC
           ant clean compile
 
-      - name: Run SonarQube Analysis
+      - name: Run SonarCloud Analysis with Quality Gate
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
@@ -76,11 +77,5 @@ jobs:
             -Dsonar.xml.file.suffixes=.xml \
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.login=$SONAR_TOKEN \
-            -Dsonar.verbose=true
-
-      - name: Check SonarCloud Quality Gate
-        uses: sonarsource/sonarcloud-quality-gate-action@master
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          organization: jeetcl
+            -Dsonar.verbose=true \
+            -Dsonar.qualitygate.wait=true
