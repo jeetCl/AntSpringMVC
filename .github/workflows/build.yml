@@ -1,19 +1,23 @@
-name: SonarQube Analysis
+name: Sonar Scan
 
 on:
-  workflow_dispatch: # Manual trigger
   push:
     branches:
-      - main
+      - master
   pull_request:
     types: [opened, synchronize, reopened]
+  workflow_dispatch:
 
 jobs:
-  sonar:
-    name: Analyze Ant Project with SonarQube
+  build:
+    name: Build and Analyze with SonarCloud
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -21,59 +25,45 @@ jobs:
           java-version: 17
           distribution: 'zulu'
 
-      - name: Install Ant
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ant
-
-      - name: Install Apache Ivy
-        run: |
-          curl -L -o ivy.jar https://repo1.maven.org/maven2/org/apache/ivy/ivy/2.5.1/ivy-2.5.1.jar
-          sudo mkdir -p /usr/share/ant/lib
-          sudo mv ivy.jar /usr/share/ant/lib/
-
-      - name: Cache Sonar packages
+      - name: Cache SonarCloud packages
         uses: actions/cache@v4
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
 
-      - name: Install SonarScanner CLI
+      - name: Install Sonar Scanner
         run: |
-          mkdir -p $HOME/.sonar
-          curl -sSLo $HOME/.sonar/sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-          unzip $HOME/.sonar/sonar-scanner.zip -d $HOME/.sonar/
-          echo "$HOME/.sonar/sonar-scanner-5.0.1.3006-linux/bin" >> $GITHUB_PATH
+          curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+          unzip sonar-scanner.zip -d $HOME
+          export PATH=$HOME/sonar-scanner-5.0.1.3006-linux/bin:$PATH
+          echo "$HOME/sonar-scanner-5.0.1.3006-linux/bin" >> $GITHUB_PATH
 
-      - name: Build Project with Ant
+      - name: Build with Ant
         run: |
-          cd AntSpringMVC
-          ant clean compile
+          ant -f AntSpringMVC/build.xml
 
-      - name: Run SonarQube Analysis
+      - name: Run Sonar Scanner
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          cd AntSpringMVC
           sonar-scanner \
-            -Dsonar.organization=jeetcl \
             -Dsonar.projectKey=jenkins-testing-antspringmvc \
-            -Dsonar.projectName="Jenkins Testing - Ant Spring MVC" \
-            -Dsonar.projectVersion=1.0 \
-            -Dsonar.sources=src \
-            -Dsonar.tests=src/com/mkyong/test \
-            -Dsonar.exclusions=**/lib/**,**/target/**,**/*.jar,**/test/** \
-            -Dsonar.test.exclusions=**/lib/**,**/target/** \
-            -Dsonar.java.source=1.8 \
-            -Dsonar.java.target=1.8 \
-            -Dsonar.java.binaries=war/WEB-INF/classes \
-            -Dsonar.java.libraries=lib/*.jar \
-            -Dsonar.junit.reportPaths=report/TEST-*.xml \
-            -Dsonar.coverage.jacoco.xmlReportPaths=target/jacoco.xml \
-            -Dsonar.jacoco.reportPaths=target/jacoco.exec \
-            -Dsonar.sourceEncoding=UTF-8 \
-            -Dsonar.web.file.suffixes=.html,.xhtml,.jsp,.jspf,.jspx \
-            -Dsonar.xml.file.suffixes=.xml \
+            -Dsonar.organization=jeetcl \
+            -Dsonar.sources=AntSpringMVC/src \
+            -Dsonar.tests=AntSpringMVC/src/com/mkyong/test \
+            -Dsonar.java.binaries=AntSpringMVC/war/WEB-INF/classes \
+            -Dsonar.java.libraries=AntSpringMVC/lib/*.jar \
+            -Dsonar.junit.reportPaths=AntSpringMVC/report/TEST-*.xml \
+            -Dsonar.coverage.jacoco.xmlReportPaths=AntSpringMVC/target/jacoco.xml \
+            -Dsonar.jacoco.reportPaths=AntSpringMVC/target/jacoco.exec \
             -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.login=$SONAR_TOKEN \
-            -Dsonar.verbose=true
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+
+      - name: Wait for Quality Gate
+        uses: sonarsource/sonarcloud-github-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectKey: jenkins-testing-antspringmvc
+          organization: jeetcl
