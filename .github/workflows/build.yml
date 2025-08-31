@@ -9,8 +9,8 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  sonar:
-    name: Analyze Ant Project with SonarCloud
+  sonar-scan:
+    name: Run SonarCloud Analysis
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -37,45 +37,4 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-
-      - name: Install SonarScanner CLI
-        run: |
-          mkdir -p $HOME/.sonar
-          curl -sSLo $HOME/.sonar/sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-          unzip $HOME/.sonar/sonar-scanner.zip -d $HOME/.sonar/
-          echo "$HOME/.sonar/sonar-scanner-5.0.1.3006-linux/bin" >> $GITHUB_PATH
-
-      - name: Build Project with Ant
-        run: |
-          cd AntSpringMVC
-          ant clean compile
-
-      - name: Run SonarCloud Analysis with Quality Gate
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          cd AntSpringMVC
-          sonar-scanner \
-            -Dsonar.organization=jeetcl \
-            -Dsonar.projectKey=jenkins-testing-antspringmvc \
-            -Dsonar.projectName="Jenkins Testing - Ant Spring MVC" \
-            -Dsonar.projectVersion=1.0 \
-            -Dsonar.sources=src \
-            -Dsonar.tests=src/com/mkyong/test \
-            -Dsonar.exclusions=**/lib/**,**/target/**,**/*.jar,**/test/** \
-            -Dsonar.test.exclusions=**/lib/**,**/target/** \
-            -Dsonar.java.source=1.8 \
-            -Dsonar.java.target=1.8 \
-            -Dsonar.java.binaries=war/WEB-INF/classes \
-            -Dsonar.java.libraries=lib/*.jar \
-            -Dsonar.junit.reportPaths=report/TEST-*.xml \
-            -Dsonar.coverage.jacoco.xmlReportPaths=target/jacoco.xml \
-            -Dsonar.jacoco.reportPaths=target/jacoco.exec \
-            -Dsonar.sourceEncoding=UTF-8 \
-            -Dsonar.web.file.suffixes=.html,.xhtml,.jsp,.jspf,.jspx \
-            -Dsonar.xml.file.suffixes=.xml \
-            -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.login=$SONAR_TOKEN \
-            -Dsonar.verbose=true \
-            -Dsonar.qualitygate.wait=true
+          key: ${{ runner.os }}-so
