@@ -79,11 +79,11 @@ jobs:
             -Dsonar.verbose=true
 
       - name: Check SonarCloud Quality Gate
-        uses: sonarsource/sonarcloud-github-action@master
+        uses: sonarsource/sonarqube-scan-action@v5.0.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
-          organization: jeetcl                 # Mandatory
-          projectKey: jenkins-testing-antspringmvc
-          # Optional: timeout in seconds (default 300s)
-          timeout: 300
+          args: >
+            -Dsonar.organization=jeetcl
+            -Dsonar.projectKey=jenkins-testing-antspringmvc
+            -Dsonar.host.url=https://sonarcloud.io
