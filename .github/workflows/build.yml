@@ -25,11 +25,13 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ant
+
       - name: Install Apache Ivy
         run: |
           curl -L -o ivy.jar https://repo1.maven.org/maven2/org/apache/ivy/ivy/2.5.1/ivy-2.5.1.jar
           sudo mkdir -p /usr/share/ant/lib
           sudo mv ivy.jar /usr/share/ant/lib/
+
       - name: Cache Sonar packages
         uses: actions/cache@v4
         with:
@@ -42,10 +44,12 @@ jobs:
           curl -sSLo $HOME/.sonar/sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
           unzip $HOME/.sonar/sonar-scanner.zip -d $HOME/.sonar/
           echo "$HOME/.sonar/sonar-scanner-5.0.1.3006-linux/bin" >> $GITHUB_PATH
+
       - name: Build Project with Ant
         run: |
           cd AntSpringMVC
           ant clean compile
+
       - name: Run SonarQube Analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -73,3 +77,11 @@ jobs:
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.login=$SONAR_TOKEN \
             -Dsonar.verbose=true
+
+      - name: Check SonarCloud Quality Gate
+        uses: sonarsource/sonarcloud-github-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectKey: jenkins-testing-antspringmvc
+          organization: jeetcl
