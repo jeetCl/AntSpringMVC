@@ -1,7 +1,7 @@
 name: SonarQube Analysis
 
 on:
-  workflow_dispatch: # Manual trigger
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -79,11 +79,8 @@ jobs:
             -Dsonar.verbose=true
 
       - name: Check SonarCloud Quality Gate
-        uses: sonarsource/sonarqube-scan-action@v5.0.0
+        uses: sonarsource/sonarcloud-quality-gate-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
-          args: >
-            -Dsonar.organization=jeetcl
-            -Dsonar.projectKey=jenkins-testing-antspringmvc
-            -Dsonar.host.url=https://sonarcloud.io
+          organization: jeetcl
